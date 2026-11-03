@@ -1,0 +1,45 @@
+name: Update election data
+
+on:
+  schedule:
+    - cron: "17 */3 * * *"   # every 3 hours
+  workflow_dispatch:          # adds a "Run workflow" button
+
+permissions:
+  contents: write
+  id-token: write   # keyless Google login
+
+concurrency:
+  group: update-data
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - id: google
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: projects/659866385408/locations/global/workloadIdentityPools/github/providers/github-actions
+          service_account: ee-sheets-reader@project-6c08a079-4a01-46eb-aaf.iam.gserviceaccount.com
+          token_format: access_token
+          access_token_scopes: https://www.googleapis.com/auth/spreadsheets.readonly
+          create_credentials_file: false
+      - name: Fetch sheet and rebuild data.json
+        env:
+          GOOGLE_TOKEN: ${{ steps.google.outputs.access_token }}
+          SHEET_ID: ${{ secrets.SHEET_ID }}
+          SHEET_GID: ${{ secrets.SHEET_GID }}
+        run: node build-data.mjs
+      - name: Commit if changed
+        run: |
+          if git diff --quiet -- data.json; then echo "Nothing to commit."; exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
+          git add data.json
+          git commit -m "Update election data"
+          git push
