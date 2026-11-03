@@ -210,11 +210,11 @@ footer{margin-top:30px;padding-top:12px;border-top:1px solid var(--line);font-si
     </div>
     <aside class="colR">
       <section class="mapcard" id="mapcard" aria-label="Map of upcoming elections">
-        <div class="maphead"><h2>Next 12 months</h2><button type="button" class="maptoggle" id="maptoggle" aria-expanded="false">Show map</button></div>
+        <div class="maphead"><h2>Next 6 months</h2><button type="button" class="maptoggle" id="maptoggle" aria-expanded="false">Show map</button></div>
         <div class="mapbody" id="mapbody">
           <div class="mapwrap" id="mapwrap"><div class="maptip" id="maptip" hidden></div></div>
           <div class="maplegend" id="maplegend"></div>
-          <p class="maphint">Colour = election types in the next 12 months; stripes = several types · click a country to filter the list</p>
+          <p class="maphint">Colour = election types in the next 6 months; stripes = several types · click a country to filter the list</p>
         </div>
       </section>
     </aside>
@@ -257,7 +257,7 @@ footer{margin-top:30px;padding-top:12px;border-top:1px solid var(--line);font-si
 <script>
 let DATA = [];
 let sourceNote = "";
-const FLAG = {"Algeria": "DZ", "Angola": "AO", "Benin": "BJ", "Botswana": "BW", "Burkina Faso": "BF", "Burundi": "BI", "Cabo Verde": "CV", "Cape Verde": "CV", "Cameroon": "CM", "Central African Republic": "CF", "Chad": "TD", "Comoros": "KM", "Congo": "CG", "Republic of the Congo": "CG", "Congo-Brazzaville": "CG", "Democratic Republic of the Congo": "CD", "DR Congo": "CD", "Congo-Kinshasa": "CD", "Côte d'Ivoire": "CI", "Cote d'Ivoire": "CI", "Ivory Coast": "CI", "Djibouti": "DJ", "Egypt": "EG", "Equatorial Guinea": "GQ", "Eritrea": "ER", "Eswatini": "SZ", "Swaziland": "SZ", "Ethiopia": "ET", "Gabon": "GA", "Gambia": "GM", "The Gambia": "GM", "Ghana": "GH", "Guinea": "GN", "Guinea-Bissau": "GW", "Kenya": "KE", "Lesotho": "LS", "Liberia": "LR", "Libya": "LY", "Madagascar": "MG", "Malawi": "MW", "Mali": "ML", "Mauritania": "MR", "Mauritius": "MU", "Morocco": "MA", "Mozambique": "MZ", "Namibia": "NA", "Niger": "NE", "Nigeria": "NG", "Rwanda": "RW", "São Tomé and Príncipe": "ST", "Sao Tome and Principe": "ST", "Senegal": "SN", "Seychelles": "SC", "Sierra Leone": "SL", "Somalia": "SO", "Somaliland": "SO", "South Africa": "ZA", "South Sudan": "SS", "Sudan": "SD", "Tanzania": "TZ", "Togo": "TG", "Tunisia": "TN", "Uganda": "UG", "Western Sahara": "EH", "Sahrawi Republic": "EH", "Sahrawi Arab Democratic Republic": "EH", "Zambia": "ZM", "Zimbabwe": "ZW", "Mayotte": "YT", "Réunion": "RE", "Reunion": "RE", "Saint Helena": "SH", "Canary Islands": "IC", "Ceuta": "EA", "Melilla": "EA", "Madeira": "PT", "African Union": "AU"};
+// Flags come from the ISO-2 code listed in the sheet (first column, e.g. ":BJ:"); rows without one show no flag.
 const CATS = [
   {id:"hos", name:"Head of state", k:"--c-hos"},
   {id:"nat", name:"National parliament", k:"--c-nat"},
@@ -321,7 +321,7 @@ function cycleTag(id){ const s=state.tags[id]; if(!s) state.tags[id]="only"; els
 function windowNow(){
   const t=new Date(); t.setHours(0,0,0,0);
   const a=new Date(t); a.setMonth(a.getMonth()-6);
-  const b=new Date(t); b.setMonth(b.getMonth()+12);
+  const b=new Date(t); b.setMonth(b.getMonth()+6);
   return {t,a,b};
 }
 
@@ -388,8 +388,8 @@ function months(arr,t){
 }
 function row(x,same,t){
   const e=x.e, c=CATS.find(c=>c.id===e.cat);
-  const code=FLAG[e.c];
-  const flag = code && !["AU","EA"].includes(code) ? `<span class="flag" aria-hidden="true">${flagEmoji(code)}</span>` : `<span class="flag code" aria-hidden="true">${code||"··"}</span>`;
+  const code=e.k;
+  const flag = code ? `<span class="flag" aria-hidden="true">${flagEmoji(code)}</span>` : "";
   const tags=[];
   if(e.by) tags.push(`<span class="tag" data-t="by" role="button" tabindex="0">By-election</span>`);
   if(e.i) tags.push(`<span class="tag" data-t="in" role="button" tabindex="0">Indirect</span>`);
@@ -446,7 +446,7 @@ async function load(){
   render();
 }
 // Data enquiry form: opens a pre-filled email.
-/* ---------- Map of the next twelve months ---------- */
+/* ---------- Map of the next six months ---------- */
 // Calendar country names that are spelled differently in the map data (Natural Earth).
 // Calendar country names that are spelled differently in the map data (Natural Earth).
 const MAP_NAME = {"Central African Republic": "Central African Rep.", "Democratic Republic of the Congo": "Dem. Rep. Congo", "DR Congo": "Dem. Rep. Congo", "Congo-Kinshasa": "Dem. Rep. Congo", "Republic of the Congo": "Congo", "Congo-Brazzaville": "Congo", "Cote d'Ivoire": "Côte d'Ivoire", "Ivory Coast": "Côte d'Ivoire", "Equatorial Guinea": "Eq. Guinea", "Eswatini": "eSwatini", "Swaziland": "eSwatini", "South Sudan": "S. Sudan", "Western Sahara": "Western Sahara", "W. Sahara": "Western Sahara", "Sahrawi Republic": "Western Sahara", "Sahrawi Arab Democratic Republic": "Western Sahara", "São Tomé and Príncipe": "São Tomé and Principe", "Sao Tome and Principe": "São Tomé and Principe", "Cape Verde": "Cabo Verde", "The Gambia": "Gambia", "Somaliland": "Somalia", "Réunion": "Reunion"};
@@ -471,7 +471,7 @@ async function initMap(){
     const proj=d3.geoAzimuthalEqualArea().rotate([-18,-2]).fitExtent([[10,10],[W-10,H-10]],frame);
     const path=d3.geoPath(proj);
     const wrap=document.getElementById("mapwrap");
-    const svg=d3.select(wrap).append("svg").attr("viewBox",`0 0 ${W} ${H}`).attr("role","img").attr("aria-label","Map of Africa coloured by the types of election in each country in the next 12 months");
+    const svg=d3.select(wrap).append("svg").attr("viewBox",`0 0 ${W} ${H}`).attr("role","img").attr("aria-label","Map of Africa coloured by the types of election in each country in the next 6 months");
     M.defs=svg.append("defs"); M.pat={};
     svg.append("rect").attr("width",W).attr("height",H).attr("fill","#eef3f7");
     M.paths=svg.append("g").selectAll("path").data(feats.filter(f=>!SMALL[f.properties.name])).join("path").attr("d",path).attr("class","ct").attr("fill","#f1f0eb");
@@ -497,7 +497,7 @@ function mapUpdate(items){
   if(!M.ready){ return; }
   M.by=new Map();
   items.forEach(x=>{ const n=MAP_NAME[x.e.c]||x.e.c; if(!M.by.has(n)) M.by.set(n,[]); M.by.get(n).push(x); });
-  // One election type: solid colour. Several types in the next 12 months: diagonal stripes of each type's colour.
+  // One election type: solid colour. Several types in the next 6 months: diagonal stripes of each type's colour.
   const cssVar=k=>getComputedStyle(document.documentElement).getPropertyValue(k).trim();
   const col=n=>{ const l=M.by.get(n); if(!l) return null;
     const cats=CATS.filter(c=>l.some(x=>x.e.cat===c.id));
@@ -515,7 +515,7 @@ function mapUpdate(items){
   const used=new Set([...M.by.values()].flatMap(l=>l.map(x=>x.e.cat)));
   lg.innerHTML=CATS.filter(c=>used.has(c.id)).map(c=>`<span><i style="background:var(${c.k})"></i>${c.name}</span>`).join("")
     +`<span><i style="background:repeating-linear-gradient(45deg,var(--c-nat) 0 3px,var(--c-reg) 3px 6px)"></i>Several types</span>`
-    +`<span><i style="background:#dddbd2"></i>No election in the next 12 months</span>`
+    +`<span><i style="background:#dddbd2"></i>No election in the next 6 months</span>`
     +(M.sel?`<button type="button" class="clear" id="mapclear">Show all countries ✕</button>`:"");
   const cl=document.getElementById("mapclear"); if(cl) cl.onclick=()=>{ M.sel=null; state.q=""; document.getElementById("q").value=""; render(); };
 }

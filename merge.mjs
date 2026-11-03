@@ -33,10 +33,12 @@ function buildEvents(table){
   const head=table[0].map(h=>clean(h).toLowerCase());
   const col=name=>head.findIndex(h=>h.includes(name));
   const C={c:col("country"),s:col("specification"),t:col("type"),m:col("mode"),q:col("sequence"),d:col("date)")>=0?col("date)"):col("date"),ok:col("status"),n:col("comment"),r:col("result")};
+  // ISO-2 code as listed in the sheet (":BJ:" in the first column), used for the flag.
+  const isoOf=r=>{ const v=r.find(x=>/^:[A-Z]{2}:$/.test(clean(x))); return v?clean(v).slice(1,3):""; };
   const rows=[];
   for(const r of table.slice(1)){
     const d=parseDate(r[C.d]); if(!d||!clean(r[C.c])) continue;
-    rows.push({c:clean(r[C.c]),s:clean(r[C.s]),t:clean(r[C.t]),m:clean(r[C.m]),q:clean(r[C.q]),d,ok:clean(r[C.ok])==="Confirmed",n:clean(r[C.n]),r:C.r>=0?clean(r[C.r]):""});
+    rows.push({c:clean(r[C.c]),s:clean(r[C.s]),t:clean(r[C.t]),m:clean(r[C.m]),q:clean(r[C.q]),d,ok:clean(r[C.ok])==="Confirmed",n:clean(r[C.n]),r:C.r>=0?clean(r[C.r]):"",k:isoOf(r)});
   }
   // 1. join rounds and voting days of one contest
   const by=new Map();
@@ -67,7 +69,7 @@ function buildEvents(table){
     const merged=[];
     P.forEach(p=>{ const base=p.l.replace(/,? ?day \d/,""); const last=merged[merged.length-1];
       if(last && last.l===base && /day/.test(p.l)){ last.e=p.d; last.ok=last.ok&&p.ok; } else merged.push({d:p.d,l:base,ok:p.ok}); });
-    const e={c:x.c,t:x.t,p:merged.map(p=>{const o={d:p.d}; if(p.e) o.e=p.e; if(p.l) o.l=p.l; if(!p.ok) o.ok=0; return o;})};
+    const e={c:x.c,k:x.k,t:x.t,p:merged.map(p=>{const o={d:p.d}; if(p.e) o.e=p.e; if(p.l) o.l=p.l; if(!p.ok) o.ok=0; return o;})};
     if(specs.length) e.s=specs.map(z=>z.ok?{n:z.n}:{n:z.n,ok:0});
     if(x.m==="indirect") e.i=1;
     if(x.n==="Not Free/Fair") e.f=1;

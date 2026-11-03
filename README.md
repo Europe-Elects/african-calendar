@@ -1,6 +1,6 @@
 # African Electoral Calendar
 
-A rolling calendar of African elections: the past six months (collapsed) and the next twelve months, with a map,
+A rolling calendar of African elections: the past six months (collapsed) and the next six months, with a map,
 filters by election type, and the result of past elections (column "Result" of the sheet).
 
 ## How it works
