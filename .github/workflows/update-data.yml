@@ -1,6 +1,8 @@
 name: Update election data
 
 on:
+  push:
+    branches: [main]          # also right after files are uploaded
   schedule:
     - cron: "17 */3 * * *"   # every 3 hours
   workflow_dispatch:          # adds a "Run workflow" button
