@@ -464,7 +464,28 @@ async function initMap(){
     const so=geos.find(g=>String(g.id)==="706"), sl=geos.find(g=>g.properties&&g.properties.name==="Somaliland");
     if(so&&sl){ const m=topojson.mergeArcs(world,[so,sl]); so.type=m.type; so.arcs=m.arcs; geos.splice(geos.indexOf(sl),1); }
     geos.forEach(g=>{ if(g.properties&&g.properties.name==="W. Sahara") g.properties.name="Western Sahara"; });
+    // Natural Earth gives Morocco everything west of the berm. Use the internationally recognised boundary instead:
+    // merge Morocco + Western Sahara, then split at 27°40'N (north = Morocco, south = Western Sahara).
+    const ma=geos.find(g=>String(g.id)==="504"), eh=geos.find(g=>String(g.id)==="732");
+    let fixWS=null;
+    if(ma&&eh){
+      const LAT=27+40/60, both=topojson.merge(world,[ma,eh]);
+      const clip=(ring,north)=>{ const ins=p=>north?p[1]>=LAT:p[1]<=LAT, out=[];
+        for(let i=0;i<ring.length-1;i++){ const a=ring[i], b=ring[i+1];
+          if(ins(a)) out.push(a);
+          if(ins(a)!==ins(b)){ const t=(LAT-a[1])/(b[1]-a[1]); out.push([a[0]+t*(b[0]-a[0]),LAT]); } }
+        if(out.length) out.push(out[0]);
+        // follow the parallel along the cut (a straight segment would be drawn as a great circle)
+        const dense=[]; out.forEach((p,i)=>{ const q=out[i+1]; dense.push(p);
+          if(q&&p[1]===LAT&&q[1]===LAT){ const n=Math.ceil(Math.abs(q[0]-p[0])/0.2); for(let k=1;k<n;k++) dense.push([p[0]+(q[0]-p[0])*k/n,LAT]); } });
+        return dense.length>3?dense:null; };
+      const part=north=>{ const polys=(both.type==="Polygon"?[both.coordinates]:both.coordinates)
+          .map(p=>p.map(r=>clip(r,north))).filter(p=>p[0]).map(p=>p.filter(Boolean));
+        return {type:"MultiPolygon",coordinates:polys}; };
+      fixWS={"Morocco":part(true),"Western Sahara":part(false)};
+    }
     const feats=topojson.feature(world,{type:"GeometryCollection",geometries:geos.filter(g=>g.type)}).features;
+    if(fixWS) feats.forEach(f=>{ const n=f.properties&&f.properties.name; if(fixWS[n]) f.geometry=fixWS[n]; });
     const W=900,H=900;
     // Frame: Africa from Cabo Verde to Mauritius, Tunisia to the Cape.
     const frame={type:"MultiPoint",coordinates:[[-25.5,15],[-17.5,21],[-6,36],[11,37.5],[33,31.5],[43.5,12],[51.5,12],[58,-20.5],[20,-35],[12,-17],[9,4],[-17.5,14.7]]};
